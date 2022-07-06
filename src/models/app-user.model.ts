@@ -41,6 +41,7 @@ export class AppUser extends Entity {
   @property({
     type: 'string',
     required: true,
+    index: {unique: true}
   })
   username: string;
 
@@ -53,12 +54,15 @@ export class AppUser extends Entity {
   @property({
     type: 'string',
     required: true,
+    index: {unique: true}
   })
   email: string;
 
   @property({
     type: 'string',
     required: true,
+    index: {unique: true}
+
   })
   emailVerified: string;
 
