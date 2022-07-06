@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {Country} from './country.model';
 
 @model()
 export class ContactInfo extends Entity {
@@ -45,6 +46,8 @@ export class ContactInfo extends Entity {
   })
   EmergencyPhone: string;
 
+  @belongsTo(() => Country)
+  CountryId: string;
 
   constructor(data?: Partial<ContactInfo>) {
     super(data);
