@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, belongsTo} from '@loopback/repository';
+import {TypeDocument} from './type-document.model';
 
 @model()
 export class UserDocument extends Entity {
@@ -28,6 +29,8 @@ export class UserDocument extends Entity {
   })
   DateExpedition: string;
 
+  @belongsTo(() => TypeDocument)
+  TypeDocumentId: string;
 
   constructor(data?: Partial<UserDocument>) {
     super(data);

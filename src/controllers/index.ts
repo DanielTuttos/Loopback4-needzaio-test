@@ -4,3 +4,6 @@ export * from './type-document.controller';
 export * from './country-contact-info.controller';
 export * from './contact-info-country.controller';
 export * from './contact-info.controller';
+export * from './type-document-user-document.controller';
+export * from './user-document-type-document.controller';
+export * from './user-document.controller';
