@@ -7,3 +7,5 @@ export * from './contact-info.controller';
 export * from './type-document-user-document.controller';
 export * from './user-document-type-document.controller';
 export * from './user-document.controller';
+export * from './app-user-user-document.controller';
+export * from './user-document-app-user.controller';
