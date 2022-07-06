@@ -1,0 +1,30 @@
+{
+  "userDara": {
+    "LastName": "string",
+    "Name": "string",
+    "IsMilitar": true,
+    "TimeCreate": "2022-07-06T23:14:06.469Z",
+    "isTemporal": true,
+    "username": "string",
+    "password": "string",
+    "email": "string",
+    "emailVerified": "string"
+  },
+  "ContactInfo": {
+    "Address": "string",
+    "City": "string",
+    "Phone": "string",
+    "CelPhone": "string",
+    "EmergencyName": "string",
+    "EmergencyPhone": "string",
+    "CountryId": "string",
+    "UserId": "string"
+  },
+  "userDocument": {
+    "Document": "string",
+    "PlaceExpedition": "string",
+    "DateExpedition": "2022-07-06T23:18:31.201Z",
+    "TypeDocumentId": "string",
+    "UserId": "string"
+  }
+}
