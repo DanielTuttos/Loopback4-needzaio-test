@@ -9,3 +9,5 @@ export * from './user-document-type-document.controller';
 export * from './user-document.controller';
 export * from './app-user-user-document.controller';
 export * from './user-document-app-user.controller';
+export * from './app-user-contact-info.controller';
+export * from './contact-info-app-user.controller';

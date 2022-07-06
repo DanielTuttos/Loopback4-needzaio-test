@@ -1,5 +1,6 @@
-import {Entity, model, property, hasOne} from '@loopback/repository';
+import {Entity, hasOne, model, property, hasMany} from '@loopback/repository';
 import {UserDocument} from './user-document.model';
+import {ContactInfo} from './contact-info.model';
 
 @model()
 export class AppUser extends Entity {
@@ -67,14 +68,11 @@ export class AppUser extends Entity {
   })
   emailVerified: string;
 
-  @property({
-    type: 'string',
-    required: true,
-  })
-  verificationToken: string;
-
   @hasOne(() => UserDocument, {keyTo: 'UserId'})
   userDocument: UserDocument;
+
+  @hasMany(() => ContactInfo, {keyTo: 'UserId'})
+  contactInfos: ContactInfo[];
 
   constructor(data?: Partial<AppUser>) {
     super(data);
