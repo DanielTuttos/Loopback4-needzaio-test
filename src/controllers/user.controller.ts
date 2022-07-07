@@ -10,6 +10,7 @@ import {
 } from '@loopback/rest';
 import {AppUser} from '../models';
 import {AppUserRepository} from '../repositories';
+import {EncryptComparePassword} from '../services/EncryptComparePassword';
 
 export class UserController {
   constructor(
@@ -34,8 +35,12 @@ export class UserController {
       },
     })
     appUser: Omit<AppUser, 'id'>,
-  ): Promise<AppUser> {
-    return this.appUserRepository.create(appUser);
+  ): Promise<any> {
+    const encrypt = new EncryptComparePassword();
+    const passwordEnc = await encrypt.encryptPassword(appUser.password);
+    const paswordComp = await encrypt.comparePassword(appUser.password, passwordEnc);
+    return passwordEnc + " | " + paswordComp;
+    // this.appUserRepository.create(appUser);
   }
 
   @get('/app-users')
