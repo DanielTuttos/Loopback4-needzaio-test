@@ -1,3 +1,4 @@
+import {inject} from '@loopback/core';
 import {
   Filter,
   FilterExcludingWhere,
@@ -6,41 +7,84 @@ import {
 import {
   del, get,
   getModelSchemaRef, param, post, put, requestBody,
-  response
+  response,
+  Response,
+  RestBindings
 } from '@loopback/rest';
-import {AppUser} from '../models';
-import {AppUserRepository} from '../repositories';
+import {AppUser, ContactInfo, UserDocument} from '../models';
+import {AppUserRepository, ContactInfoRepository, UserDocumentRepository} from '../repositories';
 import {EncryptComparePassword} from '../services/EncryptComparePassword';
+// import { model } from '@loopback/repository';
+
+interface InfoUserSave {
+  user: AppUser,
+  contact: ContactInfo,
+  document: UserDocument
+}
 
 export class UserController {
   constructor(
     @repository(AppUserRepository)
     public appUserRepository: AppUserRepository,
+    @repository(ContactInfoRepository)
+    public contactInfoRepository: ContactInfoRepository,
+    @repository(UserDocumentRepository)
+    public userDocumentRepository: UserDocumentRepository
   ) { }
 
   @post('/app-users')
   @response(200, {
     description: 'AppUser model instance',
-    content: {'application/json': {schema: getModelSchemaRef(AppUser)}},
+    // content: {'application/json': }},
   })
   async create(
     @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(AppUser, {
-            title: 'NewAppUser',
-            exclude: ['id'],
-          }),
-        },
-      },
+      // content: {
+      //   'application/json': {
+      //     schema: getModelSchemaRef(AppUser, {
+      //       title: 'NewAppUser',
+      //       exclude: ['id'],
+      //     }),
+      //   },
+      // },
     })
-    appUser: Omit<AppUser, 'id'>,
-  ): Promise<any> {
+    infoUser: InfoUserSave,
+    @inject(RestBindings.Http.RESPONSE) resp: Response
+  ) {
+    const user = infoUser.user;
+    const contact = infoUser.contact;
+    const document = infoUser.document;
+    // : Promise<any> {
     const encrypt = new EncryptComparePassword();
-    const passwordEnc = await encrypt.encryptPassword(appUser.password);
-    const paswordComp = await encrypt.comparePassword(appUser.password, passwordEnc);
-    return passwordEnc + " | " + paswordComp;
-    // this.appUserRepository.create(appUser);
+
+    // verify that the username and email do not exist
+    const userExist = await this.appUserRepository.findOne({where: {or: [{username: user.username}, {email: user.email}]}})
+    if (userExist) {
+      const exist: string[] = [];
+      if (userExist.username === user.username) exist.push("username");
+      if (userExist.email === user.email) exist.push("email");
+      return resp.status(400).json({message: "The " + exist.join(", ") + " is already registered in the system"});
+    }
+
+    // verified email
+    if (user.email !== user.emailVerified) return resp.status(400).json({message: "The email and emailVerified must be the same"});
+
+    // save user
+    const result = infoUser;
+    user.password = await encrypt.encryptPassword(user.password);
+    result.user = await this.appUserRepository.create(user);
+    result.user.password = "";
+    const {id} = result.user;
+
+    // save contact
+    contact.UserId = id ?? '1';
+    result.contact = await this.contactInfoRepository.create(contact);
+
+    // save document
+    document.UserId = id ?? '1';
+    result.document = await this.userDocumentRepository.create(document);
+
+    return result;
   }
 
   @get('/app-users')

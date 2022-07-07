@@ -1,5 +1,5 @@
 {
-  "userDara": {
+  "user": {
     "LastName": "string",
     "Name": "string",
     "IsMilitar": true,
@@ -10,7 +10,7 @@
     "email": "string",
     "emailVerified": "string"
   },
-  "ContactInfo": {
+  "contact": {
     "Address": "string",
     "City": "string",
     "Phone": "string",
@@ -20,7 +20,7 @@
     "CountryId": "string",
     "UserId": "string"
   },
-  "userDocument": {
+  "document": {
     "Document": "string",
     "PlaceExpedition": "string",
     "DateExpedition": "2022-07-06T23:18:31.201Z",
