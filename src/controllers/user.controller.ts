@@ -1,26 +1,15 @@
 import {inject} from '@loopback/core';
+import {repository} from '@loopback/repository';
 import {
-  Filter,
-  FilterExcludingWhere,
-  repository
-} from '@loopback/repository';
-import {
-  del, get,
-  getModelSchemaRef, param, post, put, requestBody,
+  del, get, param, post, put, requestBody,
   response,
   Response,
   RestBindings
 } from '@loopback/rest';
-import {AppUser, ContactInfo, UserDocument} from '../models';
+import {ContactInfo, UserDocument} from '../models';
 import {AppUserRepository, ContactInfoRepository, UserDocumentRepository} from '../repositories';
 import {EncryptComparePassword} from '../services/EncryptComparePassword';
-// import { model } from '@loopback/repository';
-
-interface InfoUserSave {
-  user: AppUser,
-  contact: ContactInfo,
-  document: UserDocument
-}
+import {InfoUserSave} from './TypesUserController';
 
 export class UserController {
   constructor(
@@ -50,11 +39,11 @@ export class UserController {
     })
     infoUser: InfoUserSave,
     @inject(RestBindings.Http.RESPONSE) resp: Response
-  ) {
+  ): Promise<Response> {
+
     const user = infoUser.user;
     const contact = infoUser.contact;
     const document = infoUser.document;
-    // : Promise<any> {
     const encrypt = new EncryptComparePassword();
 
     // verify that the username and email do not exist
@@ -84,43 +73,40 @@ export class UserController {
     document.UserId = id ?? '1';
     result.document = await this.userDocumentRepository.create(document);
 
-    return result;
+    return resp.json({result});
   }
 
   @get('/app-users')
   @response(200, {
     description: 'Array of AppUser model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(AppUser, {includeRelations: true}),
-        },
-      },
-    },
+    // content: {
+    //   'application/json': {
+    //     schema: {
+    //       type: 'array',
+    //       items: getModelSchemaRef(AppUser, {includeRelations: true}),
+    //     },
+    //   },
+    // },
   })
   async find(
-    @param.filter(AppUser) filter?: Filter<AppUser>,
-  ): Promise<AppUser[]> {
-    return this.appUserRepository.find(filter);
-  }
+    // @param.filter(AppUser) filter?: Filter<AppUser>,
+    @inject(RestBindings.Http.RESPONSE) resp: Response,
+  ) {
 
-  @get('/app-users/{id}')
-  @response(200, {
-    description: 'AppUser model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(AppUser, {includeRelations: true}),
-      },
-    },
-  })
-  async findById(
-    @param.path.string('id') id: string,
-    @param.filter(AppUser, {exclude: 'where'}) filter?: FilterExcludingWhere<AppUser>
-  ): Promise<AppUser> {
-    return this.appUserRepository.findById(id, filter);
-  }
+    let users: any[] = await this.appUserRepository.find();
 
+    let contact: ContactInfo[];
+    let document: UserDocument[];
+
+    for (let us in users) {
+      contact = await this.contactInfoRepository.find({where: {UserId: users[us].id}});
+      document = await this.userDocumentRepository.find({where: {UserId: users[us].id}});
+      users[us].contact = (contact);
+      users[us].document = (document);
+      users[us].password = "";
+    }
+    return (users);
+  }
 
   @put('/app-users/{id}')
   @response(204, {
@@ -128,9 +114,27 @@ export class UserController {
   })
   async replaceById(
     @param.path.string('id') id: string,
-    @requestBody() appUser: AppUser,
-  ): Promise<void> {
-    await this.appUserRepository.replaceById(id, appUser);
+    @requestBody() infoUser: InfoUserSave,
+  ) {
+
+    const encrypt = new EncryptComparePassword();
+    const user = infoUser.user;
+
+    const contact = infoUser.contact;
+
+    const document = infoUser.document;
+
+    contact.UserId = id;
+    document.UserId = id;
+
+    const contactInfo = await this.contactInfoRepository.findOne({where: {UserId: id}})
+    const documentInfo = await this.userDocumentRepository.findOne({where: {UserId: id}})
+    user.password = await encrypt.encryptPassword(user.password);
+
+    await this.appUserRepository.replaceById(id, user);
+    await this.contactInfoRepository.replaceById(contactInfo?.id, contact);
+    await this.userDocumentRepository.replaceById(documentInfo?.id, document);
+
   }
 
   @del('/app-users/{id}')
@@ -138,6 +142,12 @@ export class UserController {
     description: 'AppUser DELETE success',
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
+    const contactInfo = await this.contactInfoRepository.findOne({where: {UserId: id}})
+    const documentInfo = await this.userDocumentRepository.findOne({where: {UserId: id}})
+
     await this.appUserRepository.deleteById(id);
+    await this.contactInfoRepository.deleteById(contactInfo?.id);
+    await this.userDocumentRepository.deleteById(documentInfo?.id);
+
   }
 }
